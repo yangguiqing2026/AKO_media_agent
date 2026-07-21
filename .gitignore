@@ -1,0 +1,7 @@
+﻿# Environment
+secrets.env
+*.pyc
+__pycache__/
+*.log
+*.db
+output/

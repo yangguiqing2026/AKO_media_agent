@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}趋势分析 - AKO Media Agent{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>📈 趋势分析</h1>
+    <div class="action-bar">
+        <button class="btn btn-gold" onclick="triggerAnalysis()">▶ 运行分析</button>
+        <button class="btn btn-outline" onclick="loadData()">🔄 刷新</button>
+    </div>
+</div>
+
+<!-- 趋势数据 -->
+<div class="card">
+    <div class="card-title">热门关键词</div>
+    <table class="data-table">
+        <thead><tr><th>关键词</th><th>来源</th><th>词级</th><th>热度</th><th>时间</th></tr></thead>
+        <tbody id="trendTable">
+            <tr><td colspan="5" class="loading">加载中</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="grid-2">
+    <!-- 竞品动态 -->
+    <div class="card">
+        <div class="card-title">竞品动态</div>
+        <table class="data-table">
+            <thead><tr><th>竞品</th><th>标题</th><th>互动</th><th>爆款</th></tr></thead>
+            <tbody id="compTable">
+                <tr><td colspan="4" class="loading">加载中</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 行业新闻 -->
+    <div class="card">
+        <div class="card-title">行业新闻</div>
+        <table class="data-table">
+            <thead><tr><th>来源</th><th>标题</th><th>政策</th></tr></thead>
+            <tbody id="newsTable">
+                <tr><td colspan="3" class="loading">加载中</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const sourceNames = {wechat_index:'微信',douyin_hot:'抖音',xhs_hot:'小红书',baidu_index:'百度'};
+
+async function loadData() {
+    const trends = await apiGet('/api/analysis/trends') || [];
+    const comps = await apiGet('/api/analysis/competitors') || [];
+    const news = await apiGet('/api/analysis/news') || [];
+
+    const tbody = document.getElementById('trendTable');
+    if (trends.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-state"><p>暂无趋势数据</p></td></tr>';
+    } else {
+        tbody.innerHTML = trends.map(t => `
+            <tr>
+                <td><strong>${t.keyword}</strong></td>
+                <td>${sourceNames[t.source]||t.source}</td>
+                <td><span class="badge badge-${t.tier}">${t.tier}</span></td>
+                <td>${t.heat_index || 0}</td>
+                <td>${formatTime(t.recorded_at)}</td>
+            </tr>
+        `).join('');
+    }
+
+    const compBody = document.getElementById('compTable');
+    if (comps.length === 0) {
+        compBody.innerHTML = '<tr><td colspan="4" class="empty-state"><p>暂无竞品数据</p></td></tr>';
+    } else {
+        compBody.innerHTML = comps.map(c => `
+            <tr>
+                <td>${c.competitor_name||'-'}</td>
+                <td>${(c.content_title||'-').substring(0,25)}</td>
+                <td>${(c.likes||0)+(c.comments||0)+(c.shares||0)}</td>
+                <td>${c.is_viral ? '🔥' : ''}</td>
+            </tr>
+        `).join('');
+    }
+
+    const newsBody = document.getElementById('newsTable');
+    if (news.length === 0) {
+        newsBody.innerHTML = '<tr><td colspan="3" class="empty-state"><p>暂无新闻数据</p></td></tr>';
+    } else {
+        newsBody.innerHTML = news.map(n => `
+            <tr>
+                <td>${n.source||'-'}</td>
+                <td>${(n.title||'-').substring(0,30)}</td>
+                <td>${n.is_policy_change ? '📋' : ''}</td>
+            </tr>
+        `).join('');
+    }
+}
+
+async function triggerAnalysis() {
+    showToast('正在运行智能分析...', 'success');
+    const result = await apiPost('/api/analysis/trigger');
+    showToast(result.message, result.status === 'success' ? 'success' : 'error');
+    setTimeout(loadData, 2000);
+}
+
+loadData();
+</script>
+{% endblock %}

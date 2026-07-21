@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+{% block title %}仪表盘 - AKO Media Agent{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>📊 系统仪表盘</h1>
+    <div class="action-bar">
+        <button class="btn btn-gold" onclick="runPipeline()">🚀 运行完整流水线</button>
+        <button class="btn btn-outline" onclick="refreshData()">🔄 刷新</button>
+    </div>
+</div>
+
+<!-- 流水线进度 -->
+<div id="pipelineProgress" class="card" style="display:none;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div class="card-title" style="margin:0;">流水线进度</div>
+        <span id="pipelineStatus" style="font-size:12px;color:var(--ako-text-muted);"></span>
+    </div>
+    <div class="progress-bar" style="height:8px;margin-bottom:12px;">
+        <div id="pipelineBar" class="fill" style="width:0%;transition:width 0.4s ease;"></div>
+    </div>
+    <div id="pipelineSteps" style="display:flex;gap:6px;flex-wrap:wrap;">
+    </div>
+    <div id="pipelineMsg" style="margin-top:10px;font-size:13px;color:var(--ako-text-secondary);"></div>
+</div>
+
+<!-- 统计卡片 -->
+<div class="stats-grid" id="statsGrid">
+    <div class="stat-card accent">
+        <div class="stat-value" id="trendTotal">-</div>
+        <div class="stat-label">趋势数据</div>
+    </div>
+    <div class="stat-card info">
+        <div class="stat-value" id="contentTotal">-</div>
+        <div class="stat-label">内容计划</div>
+    </div>
+    <div class="stat-card success">
+        <div class="stat-value" id="publishedTotal">-</div>
+        <div class="stat-label">已发布</div>
+    </div>
+    <div class="stat-card warning">
+        <div class="stat-value" id="draftTotal">-</div>
+        <div class="stat-label">草稿</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value" id="crawledTotal">-</div>
+        <div class="stat-label">采集数据</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value" id="competitorTotal">-</div>
+        <div class="stat-label">竞品数据</div>
+    </div>
+</div>
+
+<!-- 图表区 -->
+<div class="grid-2">
+    <div class="card">
+        <div class="card-title">趋势数据分布</div>
+        <canvas id="trendChart" height="200"></canvas>
+    </div>
+    <div class="card">
+        <div class="card-title">内容状态</div>
+        <canvas id="contentChart" height="200"></canvas>
+    </div>
+</div>
+
+<!-- 最近内容 -->
+<div class="card">
+    <div class="card-title">最近内容计划</div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>标题</th>
+                <th>栏目</th>
+                <th>平台</th>
+                <th>状态</th>
+                <th>创建时间</th>
+            </tr>
+        </thead>
+        <tbody id="recentContent">
+            <tr><td colspan="5" class="loading">加载中</td></tr>
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let trendChart, contentChart;
+
+async function refreshData() {
+    const data = await apiGet('/api/dashboard');
+
+    document.getElementById('trendTotal').textContent = data.trend_total || 0;
+    document.getElementById('contentTotal').textContent = data.content_total || 0;
+    document.getElementById('publishedTotal').textContent = data.content_published || 0;
+    document.getElementById('draftTotal').textContent = data.content_draft || 0;
+    document.getElementById('crawledTotal').textContent = data.crawled_total || 0;
+    document.getElementById('competitorTotal').textContent = data.competitor_total || 0;
+
+    // 趋势分布图
+    const trendData = await apiGet('/api/analysis/trends');
+    const sourceCounts = {};
+    trendData.forEach(t => { sourceCounts[t.source] = (sourceCounts[t.source]||0) + 1; });
+
+    if (trendChart) trendChart.destroy();
+    trendChart = new Chart(document.getElementById('trendChart'), {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(sourceCounts).map(s => ({wechat_index:'微信指数',douyin_hot:'抖音热榜',xhs_hot:'小红书热搜',baidu_index:'百度指数'}[s]||s)),
+            datasets: [{
+                data: Object.values(sourceCounts),
+                backgroundColor: ['#5B6B7C','#3E4C5A','#8494A7','#9BA8B4']
+            }]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+    });
+
+    // 内容状态图
+    if (contentChart) contentChart.destroy();
+    contentChart = new Chart(document.getElementById('contentChart'), {
+        type: 'bar',
+        data: {
+            labels: ['总计','草稿','已发布'],
+            datasets: [{
+                data: [data.content_total||0, data.content_draft||0, data.content_published||0],
+                backgroundColor: ['#5B6B7C','#D4A55A','#6DBE8C']
+            }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+    });
+
+    // 最近内容
+    const contents = await apiGet('/api/content/list');
+    const tbody = document.getElementById('recentContent');
+    if (contents.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-state"><p>暂无内容计划</p></td></tr>';
+    } else {
+        tbody.innerHTML = contents.slice(0, 10).map(c => `
+            <tr>
+                <td>${c.title || '-'}</td>
+                <td>${c.column_name || '-'}</td>
+                <td>${c.platform || '-'}</td>
+                <td><span class="badge badge-${c.status}">${c.status}</span></td>
+                <td>${formatTime(c.created_at)}</td>
+            </tr>
+        `).join('');
+    }
+}
+
+async function runPipeline() {
+    if (!confirm('确认运行完整流水线？（采集→分析→决策→执行→反馈→进化）')) return;
+    document.getElementById('pipelineProgress').style.display = 'block';
+    document.getElementById('pipelineStatus').textContent = '启动中...';
+    document.getElementById('pipelineBar').style.width = '0%';
+    document.getElementById('pipelineMsg').textContent = '正在启动流水线...';
+    document.getElementById('pipelineSteps').innerHTML = '';
+    const result = await apiPost('/api/pipeline/start');
+    if (result.status === 'error') {
+        showToast(result.message, 'error');
+        return;
+    }
+    showToast('流水线已启动', 'success');
+    pollProgress();
+}
+
+let pollTimer = null;
+async function pollProgress() {
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(async () => {
+        const p = await apiGet('/api/pipeline/progress');
+        const pct = Math.round((p.step / p.total_steps) * 100);
+        document.getElementById('pipelineBar').style.width = pct + '%';
+        document.getElementById('pipelineStatus').textContent = p.running ? `${p.step}/${p.total_steps}` : (p.step >= p.total_steps ? '已完成' : '失败');
+        document.getElementById('pipelineMsg').textContent = p.message || '';
+
+        // 步骤标签
+        const stepsHtml = (p.steps || []).map((s, i) => {
+            const done = i + 1 < p.step;
+            const current = i + 1 === p.step && p.running;
+            const bg = done ? 'var(--ako-success)' : current ? 'var(--ako-accent)' : '#E8EBED';
+            const color = done || current ? '#fff' : 'var(--ako-text-muted)';
+            return `<span style="padding:3px 10px;border-radius:4px;font-size:11px;font-weight:500;background:${bg};color:${color};">${done ? '✓ ' : ''}${s}</span>`;
+        }).join('');
+        document.getElementById('pipelineSteps').innerHTML = stepsHtml;
+
+        if (!p.running) {
+            clearInterval(pollTimer);
+            pollTimer = null;
+            if (p.error) {
+                document.getElementById('pipelineBar').style.background = 'var(--ako-danger)';
+                showToast('流水线出错: ' + p.error, 'error');
+            } else {
+                document.getElementById('pipelineBar').style.width = '100%';
+                showToast('流水线运行完成', 'success');
+                refreshData();
+            }
+        }
+    }, 1500);
+}
+
+refreshData();
+</script>
+{% endblock %}

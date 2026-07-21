@@ -1,0 +1,91 @@
+{
+  "wechat": {
+    "name": "微信公众号",
+    "publish": {
+      "auto": true,
+      "review_required": true,
+      "bridge": "AKO_ext_wechat_bridge"
+    },
+    "content": {
+      "word_count": {"min": 800, "max": 2000},
+      "style": "深度+故事",
+      "cover_size": {"width": 900, "height": 383}
+    },
+    "timing": {
+      "best_slots": ["周二 18:00-20:00", "周四 18:00-20:00"],
+      "secondary_slots": ["周三 12:00-14:00"]
+    }
+  },
+  "xiaohongshu": {
+    "name": "小红书",
+    "publish": {
+      "auto": false,
+      "review_required": true,
+      "always_manual": true
+    },
+    "content": {
+      "word_count": {"min": 300, "max": 600},
+      "style": "口语+种草",
+      "cover_ratio": "3:4",
+      "hashtag_required": true
+    },
+    "timing": {
+      "best_slots": ["周三 12:00-14:00", "周五 12:00-14:00"],
+      "secondary_slots": ["每天 19:00-21:00"]
+    }
+  },
+  "douyin": {
+    "name": "抖音",
+    "publish": {
+      "auto": false,
+      "review_required": true,
+      "always_manual": true
+    },
+    "content": {
+      "duration_seconds": {"min": 15, "max": 60},
+      "style": "短句+节奏",
+      "subtitle_required": true,
+      "bgm_suggestion": true
+    },
+    "timing": {
+      "best_slots": ["每天 18:00-22:00"],
+      "secondary_slots": ["周末全天"]
+    }
+  },
+  "linkedin": {
+    "name": "LinkedIn",
+    "publish": {
+      "auto": false,
+      "review_required": true,
+      "always_manual": true
+    },
+    "content": {
+      "word_count": {"min": 200, "max": 500},
+      "style": "专业+数据",
+      "language": "en",
+      "case_study_required": true
+    },
+    "timing": {
+      "best_slots": ["周二 08:00-10:00", "周三 08:00-10:00"],
+      "secondary_slots": ["周四 12:00-14:00"]
+    }
+  },
+  "blog": {
+    "name": "官网博客",
+    "publish": {
+      "auto": true,
+      "review_required": true,
+      "target": "akobuild.cloud"
+    },
+    "content": {
+      "word_count": {"min": 1500, "max": 3000},
+      "style": "SEO+深度",
+      "keyword_layout": true,
+      "internal_links": true
+    },
+    "timing": {
+      "best_slots": ["周二 10:00-12:00", "周四 10:00-12:00"],
+      "secondary_slots": []
+    }
+  }
+}

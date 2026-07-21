@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}反馈报告 - AKO Media Agent{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>🔄 反馈报告</h1>
+    <div class="action-bar">
+        <button class="btn btn-gold" onclick="triggerFeedback(true, false)">📊 生成周报</button>
+        <button class="btn btn-primary" onclick="triggerFeedback(false, true)">📈 生成月报</button>
+        <button class="btn btn-outline" onclick="loadData()">🔄 刷新</button>
+    </div>
+</div>
+
+<!-- 表现概览 -->
+<div class="stats-grid">
+    <div class="stat-card accent">
+        <div class="stat-value" id="totalReads">-</div>
+        <div class="stat-label">总阅读量</div>
+    </div>
+    <div class="stat-card success">
+        <div class="stat-value" id="totalLikes">-</div>
+        <div class="stat-label">总点赞</div>
+    </div>
+    <div class="stat-card info">
+        <div class="stat-value" id="totalComments">-</div>
+        <div class="stat-label">总评论</div>
+    </div>
+    <div class="stat-card warning">
+        <div class="stat-value" id="totalShares">-</div>
+        <div class="stat-label">总转发</div>
+    </div>
+</div>
+
+<div class="grid-2">
+    <!-- 表现数据 -->
+    <div class="card">
+        <div class="card-title">表现追踪</div>
+        <table class="data-table">
+            <thead><tr><th>文章</th><th>平台</th><th>阅读</th><th>点赞</th><th>完读率</th></tr></thead>
+            <tbody id="perfTable">
+                <tr><td colspan="5" class="loading">加载中</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 策略调整 -->
+    <div class="card">
+        <div class="card-title">策略调整记录</div>
+        <table class="data-table">
+            <thead><tr><th>类型</th><th>维度</th><th>原因</th><th>自动</th></tr></thead>
+            <tbody id="stratTable">
+                <tr><td colspan="4" class="loading">加载中</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loadData() {
+    const dashData = await apiGet('/api/dashboard');
+    document.getElementById('totalReads').textContent = dashData.total_reads || 0;
+    document.getElementById('totalLikes').textContent = dashData.total_likes || 0;
+    document.getElementById('totalComments').textContent = dashData.total_comments || 0;
+    document.getElementById('totalShares').textContent = dashData.total_shares || 0;
+
+    const perf = await apiGet('/api/feedback/performance');
+    const perfBody = document.getElementById('perfTable');
+    if (perf.length === 0) {
+        perfBody.innerHTML = '<tr><td colspan="5" class="empty-state"><p>暂无表现数据</p></td></tr>';
+    } else {
+        perfBody.innerHTML = perf.map(p => `
+            <tr>
+                <td>${p.article_id||'-'}</td>
+                <td>${p.platform||'-'}</td>
+                <td>${p.reads||0}</td>
+                <td>${p.likes||0}</td>
+                <td>${p.completion_rate ? (p.completion_rate*100).toFixed(1)+'%' : '-'}</td>
+            </tr>
+        `).join('');
+    }
+
+    const strat = await apiGet('/api/feedback/strategy');
+    const stratBody = document.getElementById('stratTable');
+    if (strat.length === 0) {
+        stratBody.innerHTML = '<tr><td colspan="4" class="empty-state"><p>暂无策略调整</p></td></tr>';
+    } else {
+        stratBody.innerHTML = strat.map(s => `
+            <tr>
+                <td>${s.adjustment_type||'-'}</td>
+                <td>${s.dimension||'-'}</td>
+                <td>${(s.reason||'-').substring(0,25)}</td>
+                <td>${s.auto_adjusted ? '✅' : '❌'}</td>
+            </tr>
+        `).join('');
+    }
+}
+
+async function triggerFeedback(weekly, monthly) {
+    showToast('正在生成报告...', 'success');
+    const result = await apiPost('/api/feedback/trigger', { weekly, monthly });
+    showToast(result.message, result.status === 'success' ? 'success' : 'error');
+    setTimeout(loadData, 2000);
+}
+
+loadData();
+</script>
+{% endblock %}

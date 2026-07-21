@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% block title %}数据采集 - AKO Media Agent{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>🕷️ 数据采集</h1>
+    <div class="action-bar">
+        <button class="btn btn-gold" onclick="triggerCrawl('', false)">▶ 开始采集</button>
+        <button class="btn btn-primary" onclick="triggerCrawl('', true)">▶ 全量采集</button>
+        <button class="btn btn-outline" onclick="initAccounts()">🔑 一键申请账号</button>
+        <button class="btn btn-outline" onclick="loadData()">🔄 刷新</button>
+    </div>
+</div>
+
+<!-- 账号池状态 -->
+<div class="card" style="margin-bottom:20px;">
+    <div class="card-title">平台账号状态</div>
+    <div id="accountStatus" style="display:flex;gap:10px;flex-wrap:wrap;">
+        <span style="color:var(--ako-text-muted);">加载中...</span>
+    </div>
+</div>
+
+<!-- 平台快捷采集 -->
+<div class="card">
+    <div class="card-title">按平台采集</div>
+    <div class="platform-grid">
+        <div class="platform-card" onclick="triggerCrawl('xhs', false)">
+            <img src="https://www.xiaohongshu.com/favicon.ico" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect fill=%22%23FF2442%22 width=%2232%22 height=%2232%22 rx=%226%22/><text x=%2216%22 y=%2222%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>红</text></svg>'">
+            <span>小红书</span>
+        </div>
+        <div class="platform-card" onclick="triggerCrawl('dy', false)">
+            <img src="https://www.douyin.com/favicon.ico" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect fill=%22%23111%22 width=%2232%22 height=%2232%22 rx=%226%22/><text x=%2216%22 y=%2222%22 text-anchor=%22middle%22 fill=%22%2325F4EE%22 font-size=%2216%22>抖</text></svg>'">
+            <span>抖音</span>
+        </div>
+        <div class="platform-card" onclick="triggerCrawl('wb', false)">
+            <img src="https://www.weibo.com/favicon.ico" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect fill=%22%23E6162D%22 width=%2232%22 height=%2232%22 rx=%226%22/><text x=%2216%22 y=%2222%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>微</text></svg>'">
+            <span>微博</span>
+        </div>
+        <div class="platform-card" onclick="triggerCrawl('bili', false)">
+            <img src="https://www.bilibili.com/favicon.ico" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect fill=%22%2300A1D6%22 width=%2232%22 height=%2232%22 rx=%226%22/><text x=%2216%22 y=%2222%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>B</text></svg>'">
+            <span>哔哩哔哩</span>
+        </div>
+        <div class="platform-card" onclick="triggerCrawl('zhihu', false)">
+            <img src="https://www.zhihu.com/favicon.ico" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect fill=%22%230066FF%22 width=%2232%22 height=%2232%22 rx=%226%22/><text x=%2216%22 y=%2222%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>知</text></svg>'">
+            <span>知乎</span>
+        </div>
+        <div class="platform-card" onclick="triggerCrawl('wechat', false)">
+            <img src="https://res.wx.qq.com/a/wx_fed/assets/res/NTI4MWU5.ico" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect fill=%22%2307C160%22 width=%2232%22 height=%2232%22 rx=%226%22/><text x=%2216%22 y=%2222%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2214%22>微</text></svg>'">
+            <span>微信公众号</span>
+        </div>
+        <div class="platform-card" onclick="triggerCrawl('shipinhao', false)">
+            <img src="https://res.wx.qq.com/a/wx_fed/assets/res/NTI4MWU5.ico" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect fill=%22%23FA9D3B%22 width=%2232%22 height=%2232%22 rx=%226%22/><text x=%2216%22 y=%2222%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2214%22>视</text></svg>'">
+            <span>视频号</span>
+        </div>
+    </div>
+</div>
+
+<!-- 采集数据列表 -->
+<div class="card">
+    <div class="card-title">采集数据详情</div>
+    <table class="data-table">
+        <thead><tr><th>平台</th><th>标题</th><th>作者</th><th>点赞</th><th>评论</th><th>收藏</th><th>时间</th><th></th></tr></thead>
+        <tbody id="recentCrawl">
+            <tr><td colspan="8" class="loading">加载中</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- 数据详情弹窗 -->
+<div id="detailModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;" onclick="if(event.target===this)this.style.display='none'">
+    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:12px;padding:28px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h3 style="margin:0;font-size:16px;" id="detailTitle">详情</h3>
+            <button onclick="document.getElementById('detailModal').style.display='none'" style="border:none;background:none;font-size:20px;cursor:pointer;color:#999;">✕</button>
+        </div>
+        <div id="detailContent" style="font-size:14px;line-height:1.6;color:#333;"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let platChart;
+
+async function loadData() {
+    const stats = await apiGet('/api/crawler/platform-stats');
+    const recent = await apiGet('/api/crawler/recent');
+
+    const tbody = document.getElementById('recentCrawl');
+    if (recent.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="empty-state"><p>暂无数据，请先点击「开始采集」</p></td></tr>';
+    } else {
+        tbody.innerHTML = recent.map((r, idx) => `
+            <tr style="cursor:pointer;" onclick='showDetail(${JSON.stringify(r).replace(/'/g, "&#39;")})'>
+                <td>${r.platform || '-'}</td>
+                <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${(r.title||'').replace(/"/g, '&quot;')}">${(r.title || '-').substring(0, 40)}</td>
+                <td>${r.author || '-'}</td>
+                <td>${r.likes || 0}</td>
+                <td>${r.comments || 0}</td>
+                <td>${r.favorites || 0}</td>
+                <td>${formatTime(r.created_at)}</td>
+                <td style="color:var(--ako-accent);font-size:12px;">查看</td>
+            </tr>
+        `).join('');
+    }
+
+    // 更新图表
+    if (platChart) platChart.destroy();
+    const stats = await apiGet('/api/crawler/platform-stats');
+    if (stats.length > 0) {
+        platChart = new Chart(document.getElementById('platformChart'), {
+            type: 'bar',
+            data: {
+                labels: stats.map(s => s.platform),
+                datasets: [{
+                    label: '采集量',
+                    data: stats.map(s => s.cnt),
+                    backgroundColor: '#7C8FA3'
+                }]
+            },
+            options: { responsive: true, plugins: { legend: { display: false } } }
+        });
+    }
+}
+
+async function triggerCrawl(platform, full) {
+    showToast(`正在采集${platform || '全部平台'}...`, 'success');
+    const result = await apiPost('/api/crawler/trigger', { platform, full });
+    showToast(result.message, result.status === 'success' ? 'success' : 'error');
+    setTimeout(loadData, 2000);
+}
+
+async function loadAccountStatus() {
+    const accounts = await apiGet('/api/crawler/accounts') || [];
+    const container = document.getElementById('accountStatus');
+    if (accounts.length === 0) {
+        container.innerHTML = '<span style="color:var(--ako-text-muted);">暂无账号信息</span>';
+        return;
+    }
+    container.innerHTML = accounts.map(a => {
+        const hasAccount = a.count > 0;
+        return `
+            <div style="padding:8px 14px;border-radius:6px;font-size:13px;
+                background:${hasAccount ? 'rgba(76,175,80,0.1)' : 'rgba(0,0,0,0.04)'};
+                border:1px solid ${hasAccount ? 'rgba(76,175,80,0.3)' : 'rgba(0,0,0,0.08)'};">
+                <span style="font-weight:500;">${a.name}</span>
+                <span style="margin-left:6px;color:${hasAccount ? '#4CAF50' : 'var(--ako-text-muted)'};">
+                    ${hasAccount ? '✓ ' + a.count + '个账号' : '未配置'}
+                </span>
+            </div>
+        `;
+    }).join('');
+}
+
+async function initAccounts() {
+    showToast('正在初始化平台账号...', 'success');
+    const result = await apiPost('/api/crawler/accounts/init');
+    showToast(result.message, result.status === 'success' ? 'success' : 'error');
+    setTimeout(loadAccountStatus, 500);
+}
+
+loadData();
+loadAccountStatus();
+</script>
+{% endblock %}

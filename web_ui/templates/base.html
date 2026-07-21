@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AKO Media Agent{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <!-- 侧边栏 -->
+    <nav class="sidebar">
+        <div class="sidebar-brand">
+            <img src="{{ url_for('static', filename='ako_logo.png') }}" alt="阿格建筑" class="sidebar-logo">
+            <small>Media Agent v1.2</small>
+        </div>
+        <ul class="sidebar-nav">
+            <li><a href="/" class="{% if request.path == '/' %}active{% endif %}">
+                <span class="icon">📊</span><span>仪表盘</span>
+            </a></li>
+            <li><a href="/crawler" class="{% if request.path == '/crawler' %}active{% endif %}">
+                <span class="icon">🕷️</span><span>数据采集</span>
+            </a></li>
+            <li><a href="/analysis" class="{% if request.path == '/analysis' %}active{% endif %}">
+                <span class="icon">📈</span><span>趋势分析</span>
+            </a></li>
+            <li><a href="/content" class="{% if request.path == '/content' %}active{% endif %}">
+                <span class="icon">📝</span><span>内容管理</span>
+            </a></li>
+            <li><a href="/feedback" class="{% if request.path == '/feedback' %}active{% endif %}">
+                <span class="icon">🔄</span><span>反馈报告</span>
+            </a></li>
+            <li><a href="/evolution" class="{% if request.path == '/evolution' %}active{% endif %}">
+                <span class="icon">🧬</span><span>进化层</span>
+            </a></li>
+        </ul>
+    </nav>
+
+    <!-- 主内容 -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Toast 容器 -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+    // 通用工具函数
+    function showToast(msg, type='success') {
+        const c = document.getElementById('toastContainer');
+        const t = document.createElement('div');
+        t.className = `toast ${type}`;
+        t.textContent = msg;
+        c.appendChild(t);
+        setTimeout(() => t.remove(), 4000);
+    }
+
+    async function apiGet(url) {
+        try {
+            const resp = await fetch(url);
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            return await resp.json();
+        } catch (e) {
+            console.error('apiGet error:', url, e);
+            return [];
+        }
+    }
+
+    async function apiPost(url, data={}) {
+        try {
+            const resp = await fetch(url, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            return await resp.json();
+        } catch (e) {
+            console.error('apiPost error:', url, e);
+            return {status: 'error', message: e.message};
+        }
+    }
+
+    function formatTime(s) {
+        if (!s) return '-';
+        return s.replace('T', ' ').substring(0, 19);
+    }
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

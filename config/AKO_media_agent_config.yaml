@@ -1,0 +1,364 @@
+# AKO Media Agent 全局配置文件
+# 版本: v1.2
+# 文档: AKO_media_agent_whitepaper_v1.2.md
+
+app:
+  name: "AKO_media_agent"
+  version: "1.2.0"
+  environment: "development"  # development | staging | production
+  log_level: "INFO"
+  data_dir: "./data"
+  templates_dir: "./templates"
+  prompts_dir: "./prompts"
+
+# 数据库配置
+database:
+  engine: "sqlite"  # sqlite | mysql（SQLite 为默认，开箱即用）
+  host: "${DB_HOST:localhost}"
+  port: ${DB_PORT:3306}
+  name: "${DB_NAME:ako_media_agent}"
+  user: "${DB_USER:root}"
+  password: "${DB_PASSWORD:}"
+  charset: "utf8mb4"
+  pool_size: 10
+  max_overflow: 20
+  pool_recycle: 3600
+
+# 五层架构配置
+layers:
+  # Layer 1: 数据收集层
+  crawler:
+    enabled: true
+    media_crawler:
+      enabled: true
+      repo_url: "https://github.com/NanmiCoder/MediaCrawler"
+      platforms: ["xhs", "dy", "wb", "bili", "zhihu", "wechat", "shipinhao"]
+      save_format: "db"
+    news_monitor:
+      enabled: true
+      rss_feeds:
+        - "https://www.chinajsb.cn/rss"
+        - "https://www.mohurd.gov.cn/rss"
+      scan_interval_hours: 1
+      keywords:
+        - "装配式建筑"
+        - "陶粒混凝土"
+        - "预制构件"
+        - "T/CECS 10154"
+        - "模块化建筑"
+        - "钢结构住宅"
+        - "绿色建材"
+        - "碳中和建筑"
+        - "装配式政策"
+        - "建筑工业化"
+        - "智能建造"
+    competitor_tracker:
+      enabled: true
+      competitors:
+        - name: "远大住工"
+          platforms: ["wechat", "website"]
+        - name: "中民筑友"
+          platforms: ["wechat", "douyin"]
+        - name: "美好置业"
+          platforms: ["wechat", "xiaohongshu"]
+        - name: "三一筑工"
+          platforms: ["wechat", "website"]
+      remind_day: "friday"
+    trend_detector:
+      enabled: true
+      sources: ["baidu_index", "wechat_index", "douyin_hot", "xhs_hot"]
+      keyword_matrix:
+        tier1: ["装配式建筑", "模块化住宅"]
+        tier2: ["陶粒混凝土", "预制墙板", "快速建房"]
+        tier3: ["农村自建房", "轻钢别墅", "集装箱房"]
+        longtail: ["贵阳装配式建筑", "贵州模块化建筑", "三层别墅造价"]
+
+  # Layer 2: 智能分析层
+  analysis:
+    enabled: true
+    sentiment:
+      provider: "aliyun_nlp"
+      accuracy_threshold: 0.95
+      crisis_alert:
+        negative_ratio_threshold: 0.30
+        negative_count_threshold: 10
+        alert_channels: ["email", "sms"]
+        recipients: ["admin@akobuild.cloud"]
+        response_time: "30分钟"
+    topic_cluster:
+      method: "bertopic"
+      min_topics: 10
+      max_topics: 50
+    keyword_extractor:
+      methods: ["tfidf", "textrank"]
+      top_n: 50
+    engagement_predictor:
+      phase: 1  # 1=规则基线, 2=轻量ML, 3=时序模型
+      base_rates:
+        wechat: 0.05
+        xiaohongshu: 0.10
+        douyin: 0.15
+        linkedin: 0.08
+        blog: 0.03
+    gap_analyzer:
+      enabled: true
+      output_format: "heatmap"
+
+  # Layer 3: 决策引擎
+  decision:
+    enabled: true
+    content_planner:
+      rules:
+        hot_topic:
+          trigger: "热度>阈值"
+          response_hours: 2
+        competitor_follow:
+          trigger: "竞品爆款(互动>均值3倍)"
+          response_hours: 48
+        evergreen:
+          trigger: "按排期"
+        brand_event:
+          trigger: "项目节点/里程碑"
+        policy_response:
+          trigger: "行业政策变动"
+          response_hours: 4
+    title_optimizer:
+      formulas:
+        - "时间切片"
+        - "数字诚实"
+        - "材料对话"
+        - "人物在场"
+        - "技术真相"
+        - "失败档案"
+      candidates_per_article: 3
+    timing_optimizer:
+      platforms:
+        wechat:
+          best: ["周二 18:00-20:00", "周四 18:00-20:00"]
+          secondary: ["周三 12:00-14:00"]
+        xiaohongshu:
+          best: ["周三 12:00-14:00", "周五 12:00-14:00"]
+          secondary: ["每天 19:00-21:00"]
+        douyin:
+          best: ["每天 18:00-22:00"]
+          secondary: ["周末全天"]
+        linkedin:
+          best: ["周二 08:00-10:00", "周三 08:00-10:00"]
+          secondary: ["周四 12:00-14:00"]
+        blog:
+          best: ["周二 10:00-12:00", "周四 10:00-12:00"]
+
+  # Layer 4: 执行层
+  execution:
+    enabled: true
+    copywriter:
+      provider: "deepseek"  # deepseek | qwen
+      style_control:
+        corpus_min_samples: 100
+        consistency_threshold: 80
+        structure: "切片-展开-收束"
+      platforms:
+        wechat:
+          word_count: "800-2000"
+          style: "深度+故事"
+          cover_size: "900x383"
+        xiaohongshu:
+          word_count: "300-600"
+          style: "口语+种草"
+          cover_ratio: "3:4"
+        douyin:
+          duration: "15-60秒"
+          style: "短句+节奏"
+        linkedin:
+          word_count: "200-500"
+          style: "专业+数据"
+          language: "en"
+        blog:
+          word_count: "1500-3000"
+          style: "SEO+深度"
+    visual_generator:
+      provider: "AKO-ART-Agent"
+      api_endpoint: "${ART_AGENT_URL:http://localhost:8080}"
+      color_lock:
+        primary: "#EBDAB9"     # 奶油金
+        anchor: "#231E1C"       # 深棕黑
+        accent: "#A08C64"       # 琥珀金
+        highlight: "#B99B5F"    # 熔金
+      quality:
+        min_resolution: "1920x1080"
+        color_compliance: true
+        style_consistency: 0.85
+    publisher:
+      platforms:
+        wechat:
+          auto_publish: true
+          review_required: true  # Phase 1: 100%审核
+          bridge: "AKO_ext_wechat_bridge"
+        blog:
+          auto_publish: true
+          review_required: true
+          target: "akobuild.cloud"
+        xiaohongshu:
+          auto_publish: false
+          review_required: true
+        douyin:
+          auto_publish: false
+          review_required: true
+        linkedin:
+          auto_publish: false
+          review_required: true
+    mini_program:
+      enabled: true
+      sync_schedule: "daily"
+      sync_time: "14:00"
+      data_transfer: "aliyun_host"
+
+  # Layer 5: 反馈闭环
+  feedback:
+    enabled: true
+    performance_tracker:
+      metrics:
+        - "reads"
+        - "likes"
+        - "comments"
+        - "shares"
+        - "favorites"
+        - "completion_rate"
+        - "follower_growth"
+        - "conversion_rate"
+        - "mini_program_stats"
+      report_frequency:
+        weekly: "周一 09:00"
+        monthly: "每月1日 09:00"
+    strategy_adjuster:
+      auto_adjust: true
+      adjust_dimensions:
+        - "content_type_weight"
+        - "publish_timing"
+        - "keyword_priority"
+    rollback:
+      triggers:
+        negative_comment_ratio: 0.50
+        read_below_prediction_ratio: 0.20
+        platform_removal: true
+        user_complaint: true
+      alert_channels: ["email"]
+      alert_recipients: ["admin@akobuild.cloud"]
+
+# 审核流程
+review:
+  levels:
+    - level: 1
+      name: "AI自审"
+      type: "auto"
+      criteria: ["风格一致性", "数据准确性"]
+      threshold: 80
+    - level: 2
+      name: "AI思想厚度初评"
+      type: "auto"
+      criteria: ["不可替代性"]
+      threshold: 60
+    - level: 3
+      name: "运营初审"
+      type: "manual"
+      criteria: ["品牌调性", "合规性"]
+    - level: 4
+      name: "思想厚度终审"
+      type: "manual"
+      reviewer: "brand_owner"
+      threshold: 75
+    - level: 5
+      name: "发布前静默期"
+      type: "auto"
+      cooldown_hours: 24
+  thought_depth_scoring:
+    dimensions:
+      irreplaceability: 0.40
+      specificity: 0.30
+      time_honesty: 0.15
+      human_presence: 0.15
+    publish_threshold: 75
+  red_lines:
+    - "思想厚度终审必须由人完成"
+    - "灵魂元素必须由人提供"
+    - "发布前必须有24小时静默期"
+    - "互动预测仅作内部参考"
+    - "不采集付费/会员内容"
+
+# 内容矩阵
+content_matrix:
+  columns:
+    - name: "AKO建造志"
+      positioning: "建造现场的人类学"
+      platforms: ["wechat", "blog"]
+      frequency: "weekly"
+      priority: 3
+    - name: "造价说"
+      positioning: "价格的诚实"
+      platforms: ["wechat", "xiaohongshu"]
+      frequency: "biweekly"
+      priority: 3
+    - name: "黄昏建筑"
+      positioning: "建筑与光线的哲学"
+      platforms: ["xiaohongshu", "douyin"]
+      frequency: "weekly"
+      priority: 2
+    - name: "0154技术谈"
+      positioning: "标准的尊严"
+      platforms: ["wechat", "zhihu"]
+      frequency: "monthly"
+      priority: 3
+    - name: "工地24时"
+      positioning: "时间的切片"
+      platforms: ["douyin", "shipinhao"]
+      frequency: "project_based"
+      priority: 2
+    - name: "AKO人物"
+      positioning: "人的在场"
+      platforms: ["wechat", "linkedin"]
+      frequency: "monthly"
+      priority: 2
+  depth_levels:
+    - level: "L1"
+      name: "现场切片"
+      frequency: "weekly"
+    - level: "L2"
+      name: "技术诚实"
+      frequency: "biweekly"
+    - level: "L3"
+      name: "建造手记"
+      frequency: "as_needed"
+    - level: "L4"
+      name: "思想长文"
+      frequency: "monthly"
+    - level: "L5"
+      name: "年度宣言"
+      frequency: "yearly"
+
+# 定时任务
+scheduler:
+  jobs:
+    - name: "新闻监控+趋势检测"
+      cron: "0 * * * *"
+      command: "python src/crawler/news_monitor.py"
+    - name: "社交媒体全量抓取"
+      cron: "0 2 * * *"
+      command: "python src/crawler/media_crawler.py --full"
+    - name: "竞品追踪提醒"
+      cron: "0 6 * * *"
+      command: "python src/crawler/competitor_tracker.py --remind"
+    - name: "每日内容策略"
+      cron: "0 8 * * *"
+      command: "python src/decision/content_planner.py --daily"
+    - name: "公众号发布(审核)"
+      cron: "0 12 * * *"
+      command: "python src/execution/publisher.py --platform wechat --stage review"
+    - name: "小程序内容同步"
+      cron: "0 14 * * *"
+      command: "python src/execution/mini_program/content_sync.py --daily"
+    - name: "周报生成"
+      cron: "0 9 * * 1"
+      command: "python src/feedback/performance_tracker.py --weekly"
+    - name: "月报+策略调整"
+      cron: "0 9 1 * *"
+      command: "python src/feedback/strategy_adjuster.py --monthly"

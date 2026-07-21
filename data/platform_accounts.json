@@ -1,0 +1,93 @@
+{
+  "xhs": [
+    {
+      "username": "ako_xhs_8158",
+      "phone": "13838019042",
+      "token": "UFq5l2NQLEguDK3k5YIFVPivaGz43yDj",
+      "cookies": {
+        "session_id": "UFq5l2NQLEguDK3k5YIFVPivaGz43yDj",
+        "platform": "xhs"
+      },
+      "status": "active",
+      "created_at": "2026-07-12 18:50:29"
+    }
+  ],
+  "dy": [
+    {
+      "username": "ako_dy_6207",
+      "phone": "13858776754",
+      "token": "OR4gAogsSVRCyjpbicTCDOkfXXibEOXV",
+      "cookies": {
+        "session_id": "OR4gAogsSVRCyjpbicTCDOkfXXibEOXV",
+        "platform": "dy"
+      },
+      "status": "active",
+      "created_at": "2026-07-12 18:50:29"
+    }
+  ],
+  "wb": [
+    {
+      "username": "ako_wb_9158",
+      "phone": "13856309090",
+      "token": "rRyakUHF8HZ2BaGwz1xCunklK1W3KqIT",
+      "cookies": {
+        "session_id": "rRyakUHF8HZ2BaGwz1xCunklK1W3KqIT",
+        "platform": "wb"
+      },
+      "status": "active",
+      "created_at": "2026-07-12 18:50:29"
+    }
+  ],
+  "bili": [
+    {
+      "username": "ako_bili_8613",
+      "phone": "13869210172",
+      "token": "XXEAYembTyafhwZ8X2XKxdnFdUpA3DhB",
+      "cookies": {
+        "session_id": "XXEAYembTyafhwZ8X2XKxdnFdUpA3DhB",
+        "platform": "bili"
+      },
+      "status": "active",
+      "created_at": "2026-07-12 18:50:29"
+    }
+  ],
+  "zhihu": [
+    {
+      "username": "ako_zhihu_8241",
+      "phone": "13845890642",
+      "token": "qj8cyiOyTJLSmUJGSp4fmsvP26CdXkd8",
+      "cookies": {
+        "session_id": "qj8cyiOyTJLSmUJGSp4fmsvP26CdXkd8",
+        "platform": "zhihu"
+      },
+      "status": "active",
+      "created_at": "2026-07-12 18:50:29"
+    }
+  ],
+  "wechat": [
+    {
+      "username": "ako_wechat_7874",
+      "phone": "13852469373",
+      "token": "IfAgsRzHou3DWmf7mAOtUEg2mRCxFXY1",
+      "cookies": {
+        "session_id": "IfAgsRzHou3DWmf7mAOtUEg2mRCxFXY1",
+        "platform": "wechat"
+      },
+      "status": "active",
+      "created_at": "2026-07-12 18:50:29"
+    }
+  ],
+  "shipinhao": [
+    {
+      "username": "ako_shipinhao_9961",
+      "phone": "13897994465",
+      "token": "kG1arVb1oeLjlZhbjMQrh0fiPQKnZF7D",
+      "cookies": {
+        "session_id": "kG1arVb1oeLjlZhbjMQrh0fiPQKnZF7D",
+        "platform": "shipinhao"
+      },
+      "status": "active",
+      "created_at": "2026-07-12 18:50:29"
+    }
+  ]
+}

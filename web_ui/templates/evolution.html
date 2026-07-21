@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}进化层 - AKO Media Agent{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>🧬 自我学习进化层</h1>
+    <div class="action-bar">
+        <button class="btn btn-gold" onclick="triggerEvolve()">▶ 运行进化</button>
+        <button class="btn btn-outline" onclick="loadData()">🔄 刷新</button>
+    </div>
+</div>
+
+<!-- 三层架构概览 -->
+<div class="stats-grid">
+    <div class="stat-card accent">
+        <div class="stat-value">🧠</div>
+        <div class="stat-label">记忆层</div>
+        <p style="font-size:12px;color:#6B5E5E;margin-top:8px;">内容DNA · 失败案例库<br>读者画像 · 认知图谱</p>
+    </div>
+    <div class="stat-card info">
+        <div class="stat-value">📚</div>
+        <div class="stat-label">学习层</div>
+        <p style="font-size:12px;color:#6B5E5E;margin-top:8px;">表现深度学习 · 语义学习<br>竞品策略 · 知识图谱</p>
+    </div>
+    <div class="stat-card success">
+        <div class="stat-value">✨</div>
+        <div class="stat-label">涌现层</div>
+        <p style="font-size:12px;color:#6B5E5E;margin-top:8px;">内容形态发现 · 跨域迁移<br>自主工具 · 读者共创</p>
+    </div>
+</div>
+
+<!-- 进化洞察 -->
+<div class="card">
+    <div class="card-title">进化洞察记录</div>
+    <table class="data-table">
+        <thead><tr><th>类型</th><th>来源模块</th><th>置信度</th><th>已应用</th><th>时间</th></tr></thead>
+        <tbody id="insightTable">
+            <tr><td colspan="5" class="loading">加载中</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="grid-2">
+    <!-- 认知更新 -->
+    <div class="card">
+        <div class="card-title">AKO认知更新</div>
+        <table class="data-table">
+            <thead><tr><th>类别</th><th>主题</th><th>置信度</th></tr></thead>
+            <tbody id="cognTable">
+                <tr><td colspan="3" class="loading">加载中</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 内容DNA -->
+    <div class="card">
+        <div class="card-title">内容DNA提取</div>
+        <table class="data-table">
+            <thead><tr><th>内容ID</th><th>提取时间</th></tr></thead>
+            <tbody id="dnaTable">
+                <tr><td colspan="2" class="loading">加载中</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loadData() {
+    const insights = await apiGet('/api/evolution/insights');
+    const cogn = await apiGet('/api/evolution/cognition');
+    const dna = await apiGet('/api/evolution/dna');
+
+    const insBody = document.getElementById('insightTable');
+    if (insights.length === 0) {
+        insBody.innerHTML = '<tr><td colspan="5" class="empty-state"><p>暂无进化洞察</p></td></tr>';
+    } else {
+        insBody.innerHTML = insights.map(i => `
+            <tr>
+                <td>${i.insight_type||'-'}</td>
+                <td>${i.source_module||'-'}</td>
+                <td>${i.confidence ? (i.confidence*100).toFixed(0)+'%' : '-'}</td>
+                <td>${i.applied ? '✅' : '❌'}</td>
+                <td>${formatTime(i.created_at)}</td>
+            </tr>
+        `).join('');
+    }
+
+    const cognBody = document.getElementById('cognTable');
+    if (cogn.length === 0) {
+        cognBody.innerHTML = '<tr><td colspan="3" class="empty-state"><p>暂无认知更新</p></td></tr>';
+    } else {
+        cognBody.innerHTML = cogn.map(c => `
+            <tr>
+                <td>${c.category||'-'}</td>
+                <td>${(c.topic||'-').substring(0,25)}</td>
+                <td>${c.confidence ? (c.confidence*100).toFixed(0)+'%' : '-'}</td>
+            </tr>
+        `).join('');
+    }
+
+    const dnaBody = document.getElementById('dnaTable');
+    if (dna.length === 0) {
+        dnaBody.innerHTML = '<tr><td colspan="2" class="empty-state"><p>暂无DNA数据</p></td></tr>';
+    } else {
+        dnaBody.innerHTML = dna.map(d => `
+            <tr>
+                <td>${d.content_id||'-'}</td>
+                <td>${formatTime(d.extracted_at)}</td>
+            </tr>
+        `).join('');
+    }
+}
+
+async function triggerEvolve() {
+    showToast('正在运行进化层...', 'success');
+    const result = await apiPost('/api/evolution/trigger');
+    showToast(result.message, result.status === 'success' ? 'success' : 'error');
+    setTimeout(loadData, 2000);
+}
+
+loadData();
+</script>
+{% endblock %}

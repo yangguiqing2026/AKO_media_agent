@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}内容管理 - AKO Media Agent{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>📝 内容管理</h1>
+    <div class="action-bar">
+        <select id="statusFilter" class="btn btn-outline" onchange="loadData()">
+            <option value="">全部状态</option>
+            <option value="draft">草稿</option>
+            <option value="review">审核中</option>
+            <option value="published">已发布</option>
+        </select>
+        <button class="btn btn-gold" onclick="triggerPublish()">▶ 发布</button>
+        <button class="btn btn-outline" onclick="loadData()">🔄 刷新</button>
+    </div>
+</div>
+
+<!-- AI生成文案 -->
+<div class="card">
+    <div class="card-title">AI 生成文案</div>
+    <div class="action-bar">
+        <input id="genTopic" type="text" placeholder="输入选题，如：装配式建筑的成本优势" style="flex:1;min-width:200px;padding:7px 12px;border:1px solid var(--ako-border);border-radius:6px;font-size:13px;outline:none;">
+        <select id="genColumn" class="btn btn-outline">
+            <option value="AKO建造志">AKO建造志</option>
+            <option value="造价说">造价说</option>
+            <option value="黄昏建筑">黄昏建筑</option>
+            <option value="0154技术谈">0154技术谈</option>
+            <option value="工地24时">工地24时</option>
+            <option value="AKO人物">AKO人物</option>
+        </select>
+        <select id="genPlatform" class="btn btn-outline">
+            <option value="wechat">微信公众号</option>
+            <option value="xiaohongshu">小红书</option>
+            <option value="douyin">抖音</option>
+            <option value="blog">博客</option>
+        </select>
+        <button class="btn btn-gold" onclick="generateContent()">✨ 生成</button>
+    </div>
+</div>
+
+<div class="card">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>标题</th>
+                <th>栏目</th>
+                <th>平台</th>
+                <th>状态</th>
+                <th>思想厚度</th>
+                <th>创建时间</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody id="contentTable">
+            <tr><td colspan="7" class="loading">加载中</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- 内容详情弹窗 -->
+<div id="detailModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:999;display:none;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:12px;padding:24px;max-width:700px;width:90%;max-height:80vh;overflow-y:auto;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h3 id="detailTitle"></h3>
+            <button class="btn btn-outline btn-sm" onclick="closeDetail()">✕</button>
+        </div>
+        <div id="detailBody" style="font-size:14px;line-height:1.8;color:#3E4C5A;"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loadData() {
+    const status = document.getElementById('statusFilter').value;
+    const url = status ? `/api/content/list?status=${status}` : '/api/content/list';
+    const contents = await apiGet(url);
+
+    const tbody = document.getElementById('contentTable');
+    if (contents.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><p>暂无内容</p></td></tr>';
+    } else {
+        tbody.innerHTML = contents.map(c => `
+            <tr>
+                <td><a href="#" onclick="showDetail('${c.article_id}');return false;" style="color:#2C3E50;font-weight:500;">${(c.title||'-').substring(0,35)}</a></td>
+                <td>${c.column_name||'-'}</td>
+                <td>${c.platform||'-'}</td>
+                <td><span class="badge badge-${c.status}">${c.status}</span></td>
+                <td>${c.thought_depth_score ? c.thought_depth_score.toFixed(2) : '-'}</td>
+                <td>${formatTime(c.created_at)}</td>
+                <td>
+                    <button class="btn btn-outline btn-sm" onclick="deleteContent('${c.article_id}')">删除</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+}
+
+async function showDetail(articleId) {
+    const data = await apiGet(`/api/content/${articleId}`);
+    document.getElementById('detailTitle').textContent = data.title || '内容详情';
+    document.getElementById('detailBody').innerHTML = (data.body || '').replace(/\n/g, '<br>');
+    document.getElementById('detailModal').style.display = 'flex';
+}
+
+function closeDetail() {
+    document.getElementById('detailModal').style.display = 'none';
+}
+
+async function deleteContent(articleId) {
+    if (!confirm('确认删除该内容？')) return;
+    const result = await apiPost('/api/content/delete', { article_id: articleId });
+    showToast(result.message, result.status === 'success' ? 'success' : 'error');
+    loadData();
+}
+
+async function triggerPublish() {
+    if (!confirm('确认发布所有待发布内容？')) return;
+    showToast('正在发布...', 'success');
+    const result = await apiPost('/api/content/publish', { stage: 'review' });
+    showToast(result.message, result.status === 'success' ? 'success' : 'error');
+    setTimeout(loadData, 2000);
+}
+
+async function generateContent() {
+    const topic = document.getElementById('genTopic').value.trim();
+    if (!topic) { showToast('请输入选题', 'error'); return; }
+    const column = document.getElementById('genColumn').value;
+    const platform = document.getElementById('genPlatform').value;
+    showToast('正在生成文案，请稍候...', 'success');
+    try {
+        const result = await apiPost('/api/content/generate', { topic, column, platform });
+        if (result.status === 'success') {
+            showToast(`文案已生成: ${result.article.title}`, 'success');
+            document.getElementById('genTopic').value = '';
+            loadData();
+        } else {
+            showToast(result.message || '生成失败', 'error');
+        }
+    } catch (e) {
+        showToast('生成失败: ' + (e.message || e), 'error');
+    }
+}
+
+loadData();
+</script>
+{% endblock %}
