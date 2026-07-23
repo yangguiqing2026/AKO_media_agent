@@ -121,102 +121,126 @@ class AKOMediaAgent:
 
     def _init_crawler(self):
         """初始化数据收集层"""
-        from src.crawler.media_crawler import MediaCrawlerWrapper
-        from src.crawler.news_monitor import NewsMonitor
-        from src.crawler.competitor_tracker import CompetitorTracker
-        from src.crawler.trend_detector import TrendDetector
+        try:
+            from src.crawler.media_crawler import MediaCrawlerWrapper
+            from src.crawler.news_monitor import NewsMonitor
+            from src.crawler.competitor_tracker import CompetitorTracker
+            from src.crawler.trend_detector import TrendDetector
 
-        self.crawler = {
-            "media_crawler": MediaCrawlerWrapper(self.config),
-            "news_monitor": NewsMonitor(self.config),
-            "competitor_tracker": CompetitorTracker(self.config),
-            "trend_detector": TrendDetector(self.config),
-        }
+            self.crawler = {
+                "media_crawler": MediaCrawlerWrapper(self.config),
+                "news_monitor": NewsMonitor(self.config),
+                "competitor_tracker": CompetitorTracker(self.config),
+                "trend_detector": TrendDetector(self.config),
+            }
+        except ImportError as e:
+            logger.warning(f"数据收集层初始化失败（缺少依赖）: {e}")
+            self.crawler = None
 
     def _init_analyzer(self):
         """初始化智能分析层"""
-        from src.analysis.sentiment_analyzer import SentimentAnalyzer
-        from src.analysis.topic_cluster import TopicCluster
-        from src.analysis.keyword_extractor import KeywordExtractor
-        from src.analysis.engagement_predictor import EngagementPredictor
-        from src.analysis.gap_analyzer import GapAnalyzer
+        try:
+            from src.analysis.sentiment_analyzer import SentimentAnalyzer
+            from src.analysis.topic_cluster import TopicCluster
+            from src.analysis.keyword_extractor import KeywordExtractor
+            from src.analysis.engagement_predictor import EngagementPredictor
+            from src.analysis.gap_analyzer import GapAnalyzer
 
-        self.analyzer = {
-            "sentiment": SentimentAnalyzer(self.config),
-            "topic": TopicCluster(self.config),
-            "keyword": KeywordExtractor(self.config),
-            "engagement": EngagementPredictor(self.config),
-            "gap": GapAnalyzer(self.config),
-        }
+            self.analyzer = {
+                "sentiment": SentimentAnalyzer(self.config),
+                "topic": TopicCluster(self.config),
+                "keyword": KeywordExtractor(self.config),
+                "engagement": EngagementPredictor(self.config),
+                "gap": GapAnalyzer(self.config),
+            }
+        except ImportError as e:
+            logger.warning(f"智能分析层初始化失败（缺少依赖）: {e}")
+            self.analyzer = None
 
     def _init_decision(self):
         """初始化决策引擎"""
-        from src.decision.content_planner import ContentPlanner
-        from src.decision.title_optimizer import TitleOptimizer
-        from src.decision.timing_optimizer import TimingOptimizer
+        try:
+            from src.decision.content_planner import ContentPlanner
+            from src.decision.title_optimizer import TitleOptimizer
+            from src.decision.timing_optimizer import TimingOptimizer
 
-        self.decision_engine = {
-            "planner": ContentPlanner(self.config),
-            "title": TitleOptimizer(self.config),
-            "timing": TimingOptimizer(self.config),
-        }
+            self.decision_engine = {
+                "planner": ContentPlanner(self.config),
+                "title": TitleOptimizer(self.config),
+                "timing": TimingOptimizer(self.config),
+            }
+        except ImportError as e:
+            logger.warning(f"决策引擎初始化失败（缺少依赖）: {e}")
+            self.decision_engine = None
 
     def _init_executor(self):
         """初始化执行层"""
-        from src.execution.copywriter import Copywriter
-        from src.execution.visual_generator import VisualGenerator
-        from src.execution.publisher import Publisher
+        try:
+            from src.execution.copywriter import Copywriter
+            from src.execution.visual_generator import VisualGenerator
+            from src.execution.publisher import Publisher
 
-        self.executor = {
-            "copywriter": Copywriter(self.config),
-            "visual": VisualGenerator(self.config),
-            "publisher": Publisher(self.config),
-        }
+            self.executor = {
+                "copywriter": Copywriter(self.config),
+                "visual": VisualGenerator(self.config),
+                "publisher": Publisher(self.config),
+            }
+        except ImportError as e:
+            logger.warning(f"执行层初始化失败（缺少依赖）: {e}")
+            self.executor = None
 
     def _init_feedback(self):
         """初始化反馈闭环"""
-        from src.feedback.performance_tracker import PerformanceTracker
-        from src.feedback.strategy_adjuster import StrategyAdjuster
-        from src.feedback.rollback_manager import RollbackManager
+        try:
+            from src.feedback.performance_tracker import PerformanceTracker
+            from src.feedback.strategy_adjuster import StrategyAdjuster
+            from src.feedback.rollback_manager import RollbackManager
 
-        self.feedback_loop = {
-            "tracker": PerformanceTracker(self.config),
-            "adjuster": StrategyAdjuster(self.config),
-            "rollback": RollbackManager(self.config),
-        }
+            self.feedback_loop = {
+                "tracker": PerformanceTracker(self.config),
+                "adjuster": StrategyAdjuster(self.config),
+                "rollback": RollbackManager(self.config),
+            }
+        except ImportError as e:
+            logger.warning(f"反馈闭环初始化失败（缺少依赖）: {e}")
+            self.feedback_loop = None
 
     def _init_evolution(self):
         """初始化进化层"""
-        from src.evolution.memory_layer.content_dna import ContentDNA
-        from src.evolution.memory_layer.failure_case import FailureCaseLibrary
-        from src.evolution.memory_layer.reader_evolution import ReaderEvolution
-        from src.evolution.memory_layer.cognition_graph import AKOCognitionGraph
-        from src.evolution.learning_layer.performance_learner import PerformanceDeepLearning
-        from src.evolution.learning_layer.feedback_learner import FeedbackSemanticLearning
-        from src.evolution.learning_layer.competitor_learner import CompetitorPatternLearning
-        from src.evolution.learning_layer.knowledge_graph import IndustryKnowledgeGraph
-        from src.evolution.emergence_layer.content_discovery import ContentFormDiscovery
-        from src.evolution.emergence_layer.cross_domain import CrossDomainTransfer
-        from src.evolution.emergence_layer.auto_tool import AutoToolDevelopment
-        from src.evolution.emergence_layer.co_creation import ReaderCoCreation
+        try:
+            from src.evolution.memory_layer.content_dna import ContentDNA
+            from src.evolution.memory_layer.failure_case import FailureCaseLibrary
+            from src.evolution.memory_layer.reader_evolution import ReaderEvolution
+            from src.evolution.memory_layer.cognition_graph import AKOCognitionGraph
+            from src.evolution.learning_layer.performance_learner import PerformanceDeepLearning
+            from src.evolution.learning_layer.feedback_learner import FeedbackSemanticLearning
+            from src.evolution.learning_layer.competitor_learner import CompetitorPatternLearning
+            from src.evolution.learning_layer.knowledge_graph import IndustryKnowledgeGraph
+            from src.evolution.emergence_layer.content_discovery import ContentFormDiscovery
+            from src.evolution.emergence_layer.cross_domain import CrossDomainTransfer
+            from src.evolution.emergence_layer.auto_tool import AutoToolDevelopment
+            from src.evolution.emergence_layer.co_creation import ReaderCoCreation
 
-        self.evolution = {
-            # 记忆层
-            "content_dna": ContentDNA(self.config),
-            "failure_cases": FailureCaseLibrary(self.config),
-            "reader_evolution": ReaderEvolution(self.config),
-            "cognition_graph": AKOCognitionGraph(self.config),
-            # 学习层
-            "performance_learner": PerformanceDeepLearning(self.config),
-            "feedback_learner": FeedbackSemanticLearning(self.config),
-            "competitor_learner": CompetitorPatternLearning(self.config),
-            "knowledge_graph": IndustryKnowledgeGraph(self.config),
-            # 涌现层
-            "content_discovery": ContentFormDiscovery(self.config),
-            "cross_domain": CrossDomainTransfer(self.config),
-            "auto_tool": AutoToolDevelopment(self.config),
-            "co_creation": ReaderCoCreation(self.config),
-        }
+            self.evolution = {
+                # 记忆层
+                "content_dna": ContentDNA(self.config),
+                "failure_cases": FailureCaseLibrary(self.config),
+                "reader_evolution": ReaderEvolution(self.config),
+                "cognition_graph": AKOCognitionGraph(self.config),
+                # 学习层
+                "performance_learner": PerformanceDeepLearning(self.config),
+                "feedback_learner": FeedbackSemanticLearning(self.config),
+                "competitor_learner": CompetitorPatternLearning(self.config),
+                "knowledge_graph": IndustryKnowledgeGraph(self.config),
+                # 涌现层
+                "content_discovery": ContentFormDiscovery(self.config),
+                "cross_domain": CrossDomainTransfer(self.config),
+                "auto_tool": AutoToolDevelopment(self.config),
+                "co_creation": ReaderCoCreation(self.config),
+            }
+        except ImportError as e:
+            logger.warning(f"进化层初始化失败（缺少依赖）: {e}")
+            self.evolution = None
 
     # =========================================================================
     # 核心操作方法
